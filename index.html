@@ -144,6 +144,12 @@
   .scrollcue .chevs svg:nth-child(3){animation-delay:.3s}
   @keyframes cuebob{0%,100%{opacity:.3;transform:translateY(-3px)}50%{opacity:1;transform:translateY(3px)}}
   .scrollcue.hide{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(14px)}
+  @media(max-width:760px){
+    .scrollcue{bottom:18px;gap:4px}
+    .scrollcue span{font-size:13px;letter-spacing:.24em}
+    .scrollcue .chevs svg{width:38px;height:38px;margin-top:-14px}
+    .scrollcue .chevs svg:nth-child(n+2){display:none}
+  }
 
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}.reveal{opacity:1;transform:none}}
 </style>
@@ -167,9 +173,9 @@
       <div class="nav-links">
         <a href="#demo">Demo</a>
         <a href="#features">Features</a>
-        <a href="#access">Early access</a>
+        <a href="#access">Access</a>
       </div>
-      <a class="btn btn-primary" href="#access">Request early access</a>
+      <a class="btn btn-primary" href="#access">Get access</a>
     </nav>
   </div>
 </header>
@@ -192,11 +198,11 @@
         <p class="desc reveal d2"><b>RallyIQ studies your match like a coach would</b> — then shows you exactly what to work on, with skill ratings, shot breakdowns, and a personalized training plan built around how you actually play. No additional hardware required — just record with a smartphone.</p>
       </div>
 
-      <!-- EARLY ACCESS FORM -->
-      <aside class="form-card reveal d1" id="access" aria-label="Early access sign-up">
+      <!-- ACCESS FORM -->
+      <aside class="form-card reveal d1" id="access" aria-label="Access sign-up">
         <div id="formInner">
-          <h2>Get early access</h2>
-          <p class="fc-sub">Join the list for early access. All you need is a smartphone — no extra sensors or hardware.</p>
+          <h2>Get access</h2>
+          <p class="fc-sub">Join the access list. All you need is a smartphone — no extra sensors or hardware.</p>
           <form id="eaForm" novalidate>
             <div class="field">
               <label for="name">Name</label>
@@ -241,7 +247,7 @@
                 <label class="chip"><input type="checkbox" name="feature" value="Training plan">Training plan</label>
               </div>
             </div>
-            <button class="btn btn-primary" type="submit">Join the early-access list
+            <button class="btn btn-primary" type="submit">Get access
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <p class="form-note">NO SPAM · UNSUBSCRIBE ANYTIME</p>
@@ -296,7 +302,7 @@
       <p>Want this for your game?
         <span>No additional hardware required — record a match with your smartphone and let RallyIQ do the analysis.</span>
       </p>
-      <a class="btn btn-primary" href="#access">Request early access
+      <a class="btn btn-primary" href="#access">Get access
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </div>
@@ -326,8 +332,17 @@
   const cueLabel = cue ? cue.querySelector('span') : null;
   const demoSec = document.getElementById('demo');
   const featSec = document.getElementById('features');
+  const accessSec = document.getElementById('access');
   function updateCue(){
     if(!cue) return;
+    const accessTop = accessSec ? accessSec.getBoundingClientRect().top : Infinity;
+    const accessBottom = accessSec ? accessSec.getBoundingClientRect().bottom : -Infinity;
+    const activeInForm = accessSec ? accessSec.contains(document.activeElement) : false;
+    const cueWouldOverlapForm = accessTop < window.innerHeight - 160 && accessBottom > 120;
+    if(window.matchMedia('(max-width: 760px)').matches && (cueWouldOverlapForm || activeInForm)){
+      cue.classList.add('hide');
+      return;
+    }
     const T = Math.min(200, window.innerHeight * 0.45);
     const demoTop = demoSec ? demoSec.getBoundingClientRect().top : Infinity;
     const featTop = featSec ? featSec.getBoundingClientRect().top : Infinity;
@@ -339,11 +354,13 @@
   const onScroll = () => { hd.classList.toggle('scrolled', window.scrollY > 24); updateCue(); };
   onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
   window.addEventListener('resize', updateCue);
+  document.addEventListener('focusin', updateCue);
+  document.addEventListener('focusout', updateCue);
 
   const io = new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.16,rootMargin:'0px 0px -6% 0px'});
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
-  /* ---------- early-access form ---------- */
+  /* ---------- access form ---------- */
   const SIGNUP_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzz_WHanfspoBAVgviERF5Apc-kEIhdIRHdYTZLfV9opqyrpnud0_L4_D_GU24cXx8M6g/exec';
   const form = document.getElementById('eaForm');
   const submitBtn = form.querySelector('button[type="submit"]');
