@@ -7,6 +7,55 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+  !(function (t, e) {
+    var o, n, p, r;
+    e.__SV ||
+      ((window.posthog = e),
+      (e._i = []),
+      (e.init = function (i, s, a) {
+        function g(t, e) {
+          var o = e.split(".");
+          (2 == o.length && ((t = t[o[0]]), (e = o[1])),
+            (t[e] = function () {
+              t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+            }));
+        }
+        (((p = t.createElement("script")).type = "text/javascript"),
+          (p.crossOrigin = "anonymous"),
+          (p.async = !0),
+          (p.src =
+            s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js"),
+          (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r));
+        var u = e;
+        for (
+          void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
+            u.people = u.people || [],
+            u.toString = function (t) {
+              var e = "posthog";
+              return ("posthog" !== a && (e += "." + a), t || (e += " (stub)"), e);
+            },
+            u.people.toString = function () {
+              return u.toString(1) + ".people (stub)";
+            },
+            o =
+              "init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagResult isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(
+                " ",
+              ),
+            n = 0;
+          n < o.length;
+          n++
+        )
+          g(u, o[n]);
+        e._i.push([i, s, a]);
+      }),
+      (e.__SV = 1));
+  })(document, window.posthog || []);
+  posthog.init("phc_AumvmtgEsfDFpRRL4GLj9y6QTPAU8bwcQbKs9RsyNM8w", {
+    api_host: "https://us.i.posthog.com",
+    defaults: "2026-05-30",
+  });
+</script>
 <style>
   :root{
     --void:#06070D; --void-2:#0A0B14; --surface:#11131E; --surface-2:#161927;
@@ -360,6 +409,40 @@
   const io = new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.16,rootMargin:'0px 0px -6% 0px'});
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
+  /* ---------- get_access_clicked ---------- */
+  document.querySelectorAll('a[href="#access"]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      posthog.capture('get_access_clicked', { location: btn.closest('header') ? 'nav' : 'inline' });
+    });
+  });
+
+  /* ---------- demo_section_viewed ---------- */
+  const demoObserver = new IntersectionObserver((es)=>{
+    if(es[0].isIntersecting){
+      posthog.capture('demo_section_viewed');
+      demoObserver.disconnect();
+    }
+  },{threshold:.3});
+  if(demoSec) demoObserver.observe(demoSec);
+
+  /* ---------- demo_video_played ---------- */
+  const demoVideo = demoSec && demoSec.querySelector('video');
+  if(demoVideo){
+    demoVideo.addEventListener('play', ()=>{
+      posthog.capture('demo_video_played');
+    }, {once:true});
+  }
+
+  /* ---------- feature_chip_selected ---------- */
+  const featChips = document.getElementById('featChips');
+  if(featChips){
+    featChips.addEventListener('change', (e)=>{
+      if(e.target.name === 'feature'){
+        posthog.capture('feature_chip_selected', { feature: e.target.value, selected: e.target.checked });
+      }
+    });
+  }
+
   /* ---------- access form ---------- */
   const SIGNUP_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzz_WHanfspoBAVgviERF5Apc-kEIhdIRHdYTZLfV9opqyrpnud0_L4_D_GU24cXx8M6g/exec';
   const form = document.getElementById('eaForm');
@@ -390,9 +473,13 @@
         body: JSON.stringify(data)
       });
 
+      posthog.identify(data.email, { email: data.email, name: data.name, role: data.role, level: data.level });
+      posthog.capture('waitlist_signup_submitted', { role: data.role, level: data.level, feature_count: features.length });
+
       document.getElementById('formInner').classList.add('hidden');
       document.getElementById('thanksInner').classList.remove('hidden');
     }catch(err){
+      posthog.capture('waitlist_signup_failed', { error: err && err.message });
       submitBtn.disabled = false;
       submitBtn.style.opacity = '';
       submitBtn.style.cursor = '';
